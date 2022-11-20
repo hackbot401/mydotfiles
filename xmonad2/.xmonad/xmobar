@@ -1,0 +1,69 @@
+-- http://projects.haskell.org/xmobar/
+-- install xmobar with these flags: --flags="with_alsa" --flags="with_mpd" --flags="with_xft"  OR --flags="all_extensions"
+-- you can find weather location codes here: http://weather.noaa.gov/index.html
+
+Config { font    = "xft:Hack Nerd Font:pixelsize=12:antialias=true:hinting=true"
+       , additionalFonts = [ "xft:FontAwesome:pixelsize=13" ]
+       , bgColor = "#161320"
+       , fgColor = "#586e75"
+       , position = Top
+       , lowerOnStart = True
+       , hideOnStart = False
+       , allDesktops = True
+       , persistent = True
+       , iconRoot = "$HOME/.config/xmonad/xpm/"  -- default: "."
+       , commands = [
+                      -- Time and date
+                      Run Date "\xf133 %b %d %Y (%H:%M)" "date" 50
+
+                      -- Disk space free
+                    , Run Alsa "pulse" "Master" ["-t", "\xf028 vol: <volume>% " ]
+
+                      -- Cpu used in percent
+                    , Run Cpu ["-t", "\xf108 cpu: (<total>%)","-H","50","--high","red"] 20
+
+                      -- Ram used number and percent
+                    , Run Memory ["-t", "\xf233 mem: <used>M (<usedratio>%)"] 20
+
+                      -- Disk space free
+                    , Run DiskU [("/", "<fn=1>\xf0c7</fn> hdd: <free> free")] [] 60
+
+                      -- Runs custom script to check for distro updates.
+                      -- Might need changing based on the package/distro manager in use.
+                    , Run Com "/bin/bash" ["-c", "$HOME/.scripts/checkupdates"] "check"  300
+
+                    , Run Battery
+                    [ "-t", "<fc=#dc322f><acstatus></fc>"
+                    , "-L", "20"
+                    , "-H", "85"
+                    , "-l", "#dc322f"
+                    , "-n", "#dc322f"
+                    , "-h", "#dc322f"
+                    , "--" -- battery specific options
+                    -- discharging status
+                    , "-o"  , "<fn=1>\xf242</fn> <left>% (<timeleft>) <watts>"
+                    -- AC "on" status
+                    , "-O"  , "<fn=1>\xf1e6</fn> <left>%"
+                    -- charged status
+                    , "-i"  , "<fn=1>\xf1e6</fn> <left>%"
+                    , "--off-icon-pattern", "<fn=1>\xf1e6</fn>"
+                    , "--on-icon-pattern", "<fn=1>\xf1e6</fn>"
+                    ] 10
+
+                      -- Cpu temp in centigrade using a script
+                    , Run Com "/bin/bash" ["-c", "$HOME/.scripts/ctemp"] "ctemp"  10
+
+                      -- Nvidia gpu temp in centigrade using nvidia-smi
+                    , Run Com "nvidia-smi" ["--query-gpu=temperature.gpu", "--format=csv,noheader,nounits"] "gpu" 10
+
+                      -- Runs a standard shell command 'uname -r' to get kernel version
+                    , Run Com "uname" ["-r"] "ker" 0
+
+                      -- Prints out the left side items such as workspaces, layout, etc.
+                      -- The workspaces are set to be 'clickable' in .xmonad/xmonad.hs
+                    , Run UnsafeStdinReader
+                    ]
+       , sepChar = "%"
+       , alignSep = "}{"
+       , template = " <fc=#b303ff>  </fc> %UnsafeStdinReader% }{ <fc=#88C0D0> %ker% </fc><fc=#bfbfbf>| </fc><fc=#bd93f9>gpu: %gpu%°C cpu: %ctemp%°C </fc><fc=#bfbfbf>| </fc><fc=#50fa7b>%cpu% </fc><fc=#bfbfbf>| </fc><fc=#61AFEF>%memory% </fc><fc=#bfbfbf>| </fc><fc=#56B6C2>%disku% </fc><fc=#bfbfbf>| %battery% |  </fc><fc=#8BE9FD>%date%</fc> "
+       }
